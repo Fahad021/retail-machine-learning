@@ -123,24 +123,24 @@ feature_list = []
 # Grocery List Recommendation
 def recommendations(user_email):
     email = str(user_email)
-    
+
     # Convert e-mail to user_id
     user_id = int(user_df.loc[user_df['email'] == email, 'user_id'])
-    
+
     # Grab past order from 
     order = orders[orders['user_id'] == user_id].sort_values('add_to_cart_order')
     # Spilt repeat orders and non-repeat orders
     repeat = order[order['reordered'] > 0]
     nonrepeat = order[order['reordered'] == 0]
-    
+
     # Grab user past orders in kmean prediction format
     grocery_df = pd.read_sql_table("grocery_df", conn)
     user_order = grocery_df[grocery_df['user_id'] == user_id].drop('user_id', axis = 1)
-    
+
     # Fit user_id on model, return cluster 
     cluster_num = kmeans.predict(user_order.to_numpy())[0]
     top10 = cluster_top10[cluster_top10['cluster'] == cluster_num]
-    
+
     # Set starting variables
     n = 0
     for product in repeat['product_name']:
@@ -164,10 +164,9 @@ def recommendations(user_email):
     for product in repeat['product_name']:
         if (n == 3):
             break
-        else:
-            url_list = img_product.loc[img_product['product'] == product].img_url.item()
-            grocery_list.append({'product': product, 'img': url_list})
-            n = n + 1
+        url_list = img_product.loc[img_product['product'] == product].img_url.item()
+        grocery_list.append({'product': product, 'img': url_list})
+        n = n + 1
 #    return grocery_list
 
 def feature_2(user_email, user_df):

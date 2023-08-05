@@ -313,7 +313,7 @@ feature_list = []
 # Grocery List Recommendation
 def recommendations(user_email):
     email = str(user_email)
-    
+
     # Convert e-mail to user_id
     #user_id = int(user_df.loc[user_df['email'] == email, 'user_id'])
     user_id = pd.read_sql(f"SELECT user_id FROM user_df WHERE email='{email}'",conn).iloc[0,0]
@@ -323,15 +323,15 @@ def recommendations(user_email):
     # Spilt repeat orders and non-repeat orders
     repeat = order[order['reordered'] > 0]
     nonrepeat = order[order['reordered'] == 0]
-    
+
     # Grab user past orders in kmean prediction format
     user_order = pd.read_sql(f"SELECT * FROM grocery_df WHERE user_id={user_id}",conn)\
         .drop('user_id', axis = 1)
-    
+
     # Fit user_id on model, return cluster 
     cluster_num = kmeans.predict(user_order.to_numpy())[0]
     top10 = pd.read_sql(f"SELECT * FROM cluster_top10_img WHERE cluster={cluster_num}",conn)
-    
+
     # Set starting variables
     n = 0
     for product in repeat['product_name']:
@@ -355,10 +355,9 @@ def recommendations(user_email):
     for product in repeat['product_name']:
         if (n == 3):
             break
-        else:
-            url_list = pd.read_sql(f"SELECT img_url FROM product WHERE product='{product}'",conn).iloc[0,0]
-            grocery_list.append({'product': product, 'img': url_list})
-            n = n + 1
+        url_list = pd.read_sql(f"SELECT img_url FROM product WHERE product='{product}'",conn).iloc[0,0]
+        grocery_list.append({'product': product, 'img': url_list})
+        n = n + 1
 #    return grocery_list
 
 def feature_2(user_email, grocery_list):
@@ -468,11 +467,11 @@ def compare_route():
 def stock_route():
     last_row = session.query(stock.Date, stock.Open, stock.High, stock.Low, stock.Close, 
                     stock.Volume, stock.Color, stock.MovingAvg).order_by(stock.Date.desc()).limit(1)
-    year = pd.read_sql(last_row.statement, last_row.session.bind).iloc[0,0][0:4]
+    year = pd.read_sql(last_row.statement, last_row.session.bind).iloc[0,0][:4]
     start_date = f"{int(year)-1}-01-01"
     data = session.query(stock.Date, stock.Open, stock.High, stock.Low, stock.Close, 
     stock.Volume, stock.Color, stock.MovingAvg).filter(stock.Date>=start_date).all()
- 
+
     stock_df=[]
     for row in data:
         output = {
@@ -485,7 +484,7 @@ def stock_route():
             "colors": row[6],
             "movingAvg": row[7]}
         stock_df.append(output)
-        
+
     return jsonify(stock_df)
 
 @app.route("/api/stock_metric")
